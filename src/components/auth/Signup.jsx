@@ -3,7 +3,27 @@ import { Link, useNavigate } from 'react-router-dom';
 import { createUserWithEmailAndPassword, updateProfile, deleteUser } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebase'; // Import db from firebase.js
-import { FaUser, FaLock, FaEnvelope, FaUserAlt, FaKey } from 'react-icons/fa';
+import {
+  TextField,
+  Button,
+  InputAdornment,
+  Typography,
+  Container,
+  Box,
+  Paper,
+  Alert,
+  Grid,
+  Checkbox,
+  FormControlLabel,
+  CircularProgress
+} from '@mui/material';
+import { 
+  Person, 
+  Lock, 
+  Email, 
+  AccountCircle, 
+  VpnKey 
+} from '@mui/icons-material';
 
 const Signup = () => {
   const [firstName, setFirstName] = useState('');
@@ -152,155 +172,211 @@ const Signup = () => {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <div className="card w-full max-w-md">
-        <h2 className="text-center text-2xl font-bold mb-6">Sign Up</h2>
-        
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
-        )}
-        
-        <form onSubmit={handleSubmit}>
-          <div className="flex justify-between gap-4">
-            <div className="form-group w-1/2">
-              <label htmlFor="firstName" className="form-label">First Name</label>
-              <div className="relative">
-                <span className="absolute left-3 top-3 text-gray-500">
-                  {React.createElement(FaUserAlt, { size: 16 })}
-                </span>
-                <input
-                  type="text"
+    <Container component="main" maxWidth="md" sx={{ mb: 4 }}>
+      <Paper 
+        elevation={3} 
+        sx={{ 
+          my: { xs: 3, md: 6 }, 
+          p: { xs: 2, md: 4 },
+          borderRadius: 2,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.1)'
+        }}
+      >
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+          }}
+        >
+          <Typography component="h1" variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
+            Sign Up
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+            Create your account to get started
+          </Typography>
+
+          {error && (
+            <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+
+          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1, width: '100%' }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  required
+                  fullWidth
                   id="firstName"
-                  className="form-control pl-10"
+                  label="First Name"
+                  name="firstName"
+                  autoComplete="given-name"
+                  autoFocus
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Person />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{ mt: 2 }}
+                  variant="outlined"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
                   required
-                  placeholder="First Name"
+                  fullWidth
+                  id="lastName"
+                  label="Last Name"
+                  name="lastName"
+                  autoComplete="family-name"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Person />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{ mt: 2 }}
+                  variant="outlined"
                 />
-              </div>
-            </div>
+              </Grid>
+            </Grid>
             
-            <div className="form-group w-1/2">
-              <label htmlFor="lastName" className="form-label">Last Name</label>
-              <input
-                type="text"
-                id="lastName"
-                className="form-control"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                required
-                placeholder="Last Name"
-              />
-            </div>
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor="username" className="form-label">Username</label>
-            <div className="relative">
-              <span className="absolute left-3 top-3 text-gray-500">
-                {React.createElement(FaUser, { size: 16 })}
-              </span>
-              <input
-                type="text"
-                id="username"
-                className="form-control pl-10"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                placeholder="Choose a username"
-              />
-            </div>
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor="email" className="form-label">Email Id</label>
-            <div className="relative">
-              <span className="absolute left-3 top-3 text-gray-500">
-                {React.createElement(FaEnvelope, { size: 16 })}
-              </span>
-              <input
-                type="email"
-                id="email"
-                className="form-control pl-10"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="Enter your email"
-              />
-            </div>
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor="password" className="form-label">Password</label>
-            <div className="relative">
-              <span className="absolute left-3 top-3 text-gray-500">
-                {React.createElement(FaLock, { size: 16 })}
-              </span>
-              <input
-                type="password"
-                id="password"
-                className="form-control pl-10"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="Create a password (min 6 characters)"
-              />
-            </div>
-          </div>
-          
-          <div className="form-group mt-4">
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="showSecret"
-                className="mr-2"
-                checked={showSecretField}
-                onChange={() => setShowSecretField(!showSecretField)}
-              />
-              <label htmlFor="showSecret" className="text-sm text-gray-600 cursor-pointer">
-                I have an admin access code
-              </label>
-            </div>
-          </div>
-          
-          {showSecretField && (
-            <div className="form-group mt-4">
-              <label htmlFor="secretKey" className="form-label">Admin Secret Key</label>
-              <div className="relative">
-                <span className="absolute left-3 top-3 text-gray-500">
-                  {React.createElement(FaKey, { size: 16 })}
-                </span>
-                <input
-                  type="password"
-                  id="secretKey"
-                  className="form-control pl-10"
-                  value={secretKey}
-                  onChange={(e) => setSecretKey(e.target.value)}
-                  placeholder="Enter admin secret key"
+            <TextField
+              required
+              fullWidth
+              id="username"
+              label="Username"
+              name="username"
+              autoComplete="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <AccountCircle />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ mt: 3 }}
+              variant="outlined"
+            />
+            
+            <TextField
+              required
+              fullWidth
+              id="email"
+              label="Email Address"
+              name="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Email />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ mt: 3 }}
+              variant="outlined"
+            />
+            
+            <TextField
+              required
+              fullWidth
+              name="password"
+              label="Password"
+              type="password"
+              id="password"
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Lock />
+                  </InputAdornment>
+                ),
+              }}
+              helperText="Password must be at least 6 characters"
+              sx={{ mt: 3 }}
+              variant="outlined"
+            />
+            
+            <FormControlLabel
+              control={
+                <Checkbox 
+                  checked={showSecretField}
+                  onChange={() => setShowSecretField(!showSecretField)}
+                  color="primary"
                 />
-              </div>
-              <p className="text-xs text-gray-500 mt-1">
-                If you have the admin access code, enter it to create an administrator account
-              </p>
-            </div>
-          )}
-          
-          <button 
-            type="submit" 
-            className="btn btn-primary w-full py-2 mt-4"
-            disabled={loading}
-          >
-            {loading ? 'Signing Up...' : 'Sign Up'}
-          </button>
-        </form>
-        
-        <div className="mt-4 text-center">
-          <p>Already have an account? <Link to="/login" className="text-blue-600 hover:underline">Login</Link></p>
-        </div>
-      </div>
-    </div>
+              }
+              label="I have an admin access code"
+              sx={{ mt: 1 }}
+            />
+            
+            {showSecretField && (
+              <TextField
+                fullWidth
+                name="secretKey"
+                label="Admin Secret Key"
+                type="password"
+                id="secretKey"
+                value={secretKey}
+                onChange={(e) => setSecretKey(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <VpnKey />
+                    </InputAdornment>
+                  ),
+                }}
+                helperText="Enter the admin secret key to create an administrator account"
+                sx={{ mt: 3 }}
+                variant="outlined"
+              />
+            )}
+            
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              disabled={loading}
+              sx={{
+                mt: 3,
+                mb: 2,
+                py: 1.5,
+                bgcolor: '#F59E0B',
+                '&:hover': {
+                  bgcolor: '#D97706',
+                },
+                fontWeight: 500,
+                fontSize: '1rem'
+              }}
+            >
+              {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign Up'}
+            </Button>
+            
+            <Box sx={{ textAlign: 'center', mt: 2 }}>
+              <Typography variant="body2" color="text.secondary">
+                Already have an account?{' '}
+                <Link to="/login" style={{ color: '#F59E0B', fontWeight: 500, textDecoration: 'none' }}>
+                  Login
+                </Link>
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+      </Paper>
+    </Container>
   );
 };
 

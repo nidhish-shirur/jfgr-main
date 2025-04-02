@@ -1,21 +1,40 @@
 import React, { useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../firebase';
-import { 
-  FaMapMarkerAlt, 
-  FaExclamationTriangle, 
-  FaInfoCircle, 
-  FaImage, 
-  FaCheckCircle,
-  FaCloudUploadAlt,
-  FaRegTrashAlt
-} from 'react-icons/fa';
+import {
+  Box,
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Grid,
+  MenuItem,
+  Paper,
+  Alert,
+  AlertTitle,
+  IconButton,
+  LinearProgress,
+  Divider,
+  Card,
+  CardMedia,
+  Stack
+} from '@mui/material';
+import {
+  LocationOn as LocationIcon,
+  Report as ReportIcon,
+  Info as InfoIcon,
+  CloudUpload as CloudUploadIcon,
+  Delete as DeleteIcon,
+  Check as CheckIcon,
+  Home as HomeIcon
+} from '@mui/icons-material';
 
 const RegisterComplaint = () => {
   const { currentUser, currentUserData } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -29,6 +48,15 @@ const RegisterComplaint = () => {
   const [imagePreviewUrls, setImagePreviewUrls] = useState([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef(null);
+
+  // Redirect non-logged in users
+  /* Temporarily disabled for testing
+  React.useEffect(() => {
+    if (!currentUser) {
+      navigate('/complaint-landing');
+    }
+  }, [currentUser, navigate]);
+  */
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -97,15 +125,21 @@ const RegisterComplaint = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!currentUser) {
-      setError('You must be logged in to submit a complaint');
-      return;
-    }
-    
     try {
       setError('');
       setLoading(true);
       setUploadProgress(10);
+      
+      // For testing without login
+      if (!currentUser) {
+        setUploadProgress(100);
+        setSuccess('Testing mode: Complaint would be submitted in production environment. This is just a preview.');
+        setTimeout(() => {
+          setSuccess('');
+        }, 7000);
+        setLoading(false);
+        return;
+      }
       
       // Upload images if any
       let imageUrls = [];
@@ -164,240 +198,308 @@ const RegisterComplaint = () => {
   };
 
   return (
-    <div className="py-12 bg-light-gray">
-      <div className="container max-w-4xl">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold text-secondary-color mb-4">Register your Complaint</h2>
-          <p className="text-text-light max-w-2xl mx-auto">
-            Help us identify infrastructure issues by providing detailed information. Your input is valuable in making Ghodbunder Road better for everyone.
-          </p>
-        </div>
-        
-        {!currentUser && (
-          <div className="card mb-8 bg-yellow-50 border-l-4 border-yellow-400 p-6">
-            <div className="flex items-start">
-              <div className="flex-shrink-0">
-                <svg className="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-lg font-medium text-yellow-700">Authentication required</h3>
-                <div className="mt-2 text-yellow-600">
-                  <p>Please <Link to="/login" className="font-semibold underline">login</Link> or <Link to="/signup" className="font-semibold underline">register</Link> to submit a complaint. This helps us track and respond to your issues effectively.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {error && (
-          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded">
-            <div className="flex items-center">
-              <svg className="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-              <span>{error}</span>
-            </div>
-          </div>
-        )}
-        
-        {success && (
-          <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded">
-            <div className="flex items-center">
-              {React.createElement(FaCheckCircle, { size: 20, className: "mr-2" })}
-              <span>{success}</span>
-            </div>
-          </div>
-        )}
-        
-        <div className="card shadow-lg">
-          <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="form-group md:col-span-2">
-                <label htmlFor="title" className="form-label flex items-center">
-                  {React.createElement(FaExclamationTriangle, { size: 16, className: "mr-2 text-primary-color" })}
-                  Issue Title
-                </label>
-                <input
-                  type="text"
-                  id="title"
+    <Box sx={{ py: 6, bgcolor: '#F5F7FA' }}>
+      <Container maxWidth="md">
+        <Paper elevation={0} sx={{ p: { xs: 2, md: 4 }, borderRadius: 2, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+          <Box sx={{ mb: 4, textAlign: 'center' }}>
+            <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', mb: 1 }}>
+              Register Your Complaint
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              Noticed a problem? Report it, and we'll take it from here!
+            </Typography>
+            <Divider sx={{ 
+              width: '60px', 
+              borderColor: '#F59E0B', 
+              borderWidth: 3, 
+              mx: 'auto',
+              my: 2 
+            }} />
+          </Box>
+          
+          {error && (
+            <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+              <AlertTitle>Error</AlertTitle>
+              {error}
+            </Alert>
+          )}
+          
+          {success && (
+            <Alert 
+              severity="success" 
+              sx={{ mb: 3, borderRadius: 2 }}
+              icon={<CheckIcon fontSize="inherit" />}
+            >
+              <AlertTitle>Success!</AlertTitle>
+              {success}
+            </Alert>
+          )}
+          
+          <Box component="form" onSubmit={handleSubmit}>
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  label="Issue Title"
                   name="title"
-                  className="form-control"
                   value={formData.title}
                   onChange={handleInputChange}
                   required
                   placeholder="Brief title describing the issue (e.g., Pothole at Kasarvadavali Junction)"
-                  disabled={!currentUser || loading}
+                  disabled={loading}
+                  InputProps={{
+                    startAdornment: (
+                      <ReportIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                    ),
+                  }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                 />
-              </div>
+              </Grid>
               
-              <div className="form-group md:col-span-2">
-                <label htmlFor="description" className="form-label flex items-center">
-                  {React.createElement(FaInfoCircle, { size: 16, className: "mr-2 text-primary-color" })}
-                  Detailed Description
-                </label>
-                <textarea
-                  id="description"
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  multiline
+                  rows={4}
+                  label="Detailed Description"
                   name="description"
-                  className="form-control min-h-[150px] resize-y"
                   value={formData.description}
                   onChange={handleInputChange}
                   required
                   placeholder="Provide details about the issue, including its severity, how long it has existed, and any hazards it presents"
-                  disabled={!currentUser || loading}
-                ></textarea>
-              </div>
+                  disabled={loading}
+                  InputProps={{
+                    startAdornment: (
+                      <InfoIcon sx={{ mr: 1, mt: 1, color: 'text.secondary' }} />
+                    ),
+                  }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                />
+              </Grid>
               
-              <div className="form-group">
-                <label htmlFor="location" className="form-label flex items-center">
-                  {React.createElement(FaMapMarkerAlt, { size: 16, className: "mr-2 text-primary-color" })}
-                  Location
-                </label>
-                <input
-                  type="text"
-                  id="location"
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  label="Location"
                   name="location"
-                  className="form-control"
                   value={formData.location}
                   onChange={handleInputChange}
                   required
-                  placeholder="Precise location of the issue (e.g., Near Viviana Mall, Ghodbunder Road)"
-                  disabled={!currentUser || loading}
+                  placeholder="Precise location of the issue"
+                  disabled={loading}
+                  InputProps={{
+                    startAdornment: (
+                      <LocationIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                    ),
+                  }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                 />
-              </div>
+              </Grid>
               
-              <div className="form-group">
-                <label htmlFor="type" className="form-label flex items-center">
-                  {React.createElement(FaInfoCircle, { size: 16, className: "mr-2 text-primary-color" })}
-                  Issue Type
-                </label>
-                <select
-                  id="type"
+              <Grid item xs={12} md={6}>
+                <TextField
+                  select
+                  fullWidth
+                  variant="outlined"
+                  label="Issue Type"
                   name="type"
-                  className="form-control"
                   value={formData.type}
                   onChange={handleInputChange}
-                  disabled={!currentUser || loading}
+                  disabled={loading}
+                  InputProps={{
+                    startAdornment: (
+                      <InfoIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                    ),
+                  }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                 >
-                  <option value="pothole">Pothole</option>
-                  <option value="traffic">Traffic Signal Malfunction</option>
-                  <option value="debris">Road Debris</option>
-                  <option value="flooding">Road Flooding</option>
-                  <option value="lighting">Street Light Issue</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
+                  <MenuItem value="pothole">Pothole</MenuItem>
+                  <MenuItem value="traffic">Traffic Signal Malfunction</MenuItem>
+                  <MenuItem value="debris">Road Debris</MenuItem>
+                  <MenuItem value="flooding">Road Flooding</MenuItem>
+                  <MenuItem value="lighting">Street Light Issue</MenuItem>
+                  <MenuItem value="other">Other</MenuItem>
+                </TextField>
+              </Grid>
               
-              <div className="form-group md:col-span-2">
-                <label className="form-label flex items-center">
-                  {React.createElement(FaImage, { size: 16, className: "mr-2 text-primary-color" })}
-                  Upload Images (Max 3)
-                </label>
-                
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary-color transition-colors cursor-pointer" onClick={() => !loading && currentUser && fileInputRef.current?.click()}>
+              <Grid item xs={12}>
+                <Box 
+                  sx={{ 
+                    border: '2px dashed',
+                    borderColor: 'divider',
+                    borderRadius: 2,
+                    p: 3,
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      borderColor: '#F59E0B',
+                      bgcolor: 'rgba(245, 158, 11, 0.04)'
+                    }
+                  }}
+                  onClick={() => !loading && fileInputRef.current?.click()}
+                >
                   <input
                     type="file"
                     ref={fileInputRef}
                     accept="image/*"
                     multiple
                     onChange={handleImageChange}
-                    className="hidden"
-                    disabled={!currentUser || loading || formData.images.length >= 3}
+                    style={{ display: 'none' }}
+                    disabled={loading || formData.images.length >= 3}
                   />
                   
-                  {React.createElement(FaCloudUploadAlt, { size: 48, className: "mx-auto mb-4 text-gray-400" })}
+                  <CloudUploadIcon sx={{ fontSize: 48, color: '#F59E0B', mb: 2 }} />
                   
-                  <p className="text-lg font-medium mb-2">
+                  <Typography variant="h6" sx={{ mb: 1 }}>
                     {formData.images.length === 0 
-                      ? 'Drag & drop images here or click to browse' 
-                      : `${formData.images.length} image(s) selected (${3 - formData.images.length} more allowed)`}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Images help us better understand the issue. Please upload clear photos.
-                  </p>
-                  <p className="text-xs text-gray-400 mt-2">
+                      ? 'Upload Images' 
+                      : `${formData.images.length} image(s) selected`}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Drag & drop or click to browse images (max 3 images)
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
                     Supported formats: JPG, PNG, JPEG (Max: 5MB per image)
-                  </p>
-                </div>
-                
-                {imagePreviewUrls.length > 0 && (
-                  <div className="mt-6">
-                    <p className="text-sm text-gray-600 mb-3">Selected Images:</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      {imagePreviewUrls.map((url, index) => (
-                        <div key={index} className="relative group">
-                          <img
-                            src={url}
+                  </Typography>
+                </Box>
+              </Grid>
+              
+              {imagePreviewUrls.length > 0 && (
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 500 }}>
+                    Selected Images:
+                  </Typography>
+                  <Grid container spacing={2}>
+                    {imagePreviewUrls.map((url, index) => (
+                      <Grid item xs={12} sm={4} key={index}>
+                        <Card sx={{ position: 'relative', borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
+                          <CardMedia
+                            component="img"
+                            height="140"
+                            image={url}
                             alt={`Preview ${index + 1}`}
-                            className="w-full h-32 object-cover rounded-lg shadow"
                           />
-                          <button
-                            type="button"
-                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          <IconButton
+                            aria-label="delete"
+                            sx={{
+                              position: 'absolute',
+                              top: 8,
+                              right: 8,
+                              bgcolor: 'rgba(0, 0, 0, 0.6)',
+                              color: 'white',
+                              '&:hover': {
+                                bgcolor: 'error.main'
+                              }
+                            }}
                             onClick={() => removeImage(index)}
-                            aria-label="Remove image"
+                            disabled={loading}
                           >
-                            {React.createElement(FaRegTrashAlt, { size: 14 })}
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            {loading && (
-              <div className="my-6">
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div 
-                    className="bg-primary-color h-2.5 rounded-full transition-all duration-300" 
-                    style={{ width: `${uploadProgress}%` }}
-                  ></div>
-                </div>
-                <p className="text-sm text-center mt-2 text-gray-600">
-                  {uploadProgress < 100 ? 'Processing your complaint...' : 'Complaint submitted!'}
-                </p>
-              </div>
-            )}
-            
-            <div className="flex justify-end mt-8">
-              <Link 
-                to="/"
-                className="btn bg-gray-200 text-gray-700 mr-4 hover:bg-gray-300"
-              >
-                Cancel
-              </Link>
-              <button
-                type="submit"
-                className="btn btn-primary px-8"
-                disabled={!currentUser || loading}
-              >
-                {loading ? 'Submitting...' : 'Submit Complaint'}
-              </button>
-            </div>
-          </form>
-        </div>
-        
-        {currentUser && (
-          <div className="mt-8 p-4 bg-blue-50 border-l-4 border-blue-400 text-blue-700 rounded">
-            <div className="flex">
-              {React.createElement(FaInfoCircle, { size: 20, className: "mr-3 flex-shrink-0" })}
-              <div>
-                <p className="font-medium">What happens next?</p>
-                <ul className="list-disc ml-6 mt-2 text-sm">
-                  <li>Your complaint will be reviewed by our team</li>
-                  <li>The issue will be escalated to the appropriate authorities</li>
-                  <li>You'll receive updates on the status via email</li>
-                  <li>The complaint will be visible on our tracking dashboard</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Card>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Grid>
+              )}
+              
+              {loading && (
+                <Grid item xs={12}>
+                  <Box sx={{ width: '100%', mb: 2 }}>
+                    <LinearProgress 
+                      variant="determinate" 
+                      value={uploadProgress} 
+                      sx={{ 
+                        height: 6, 
+                        borderRadius: 3,
+                        backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                        '& .MuiLinearProgress-bar': {
+                          backgroundColor: '#F59E0B'
+                        }
+                      }} 
+                    />
+                  </Box>
+                  <Typography variant="body2" align="center" color="text.secondary">
+                    {uploadProgress < 100 ? 'Processing your complaint...' : 'Complaint submitted!'}
+                  </Typography>
+                </Grid>
+              )}
+              
+              <Grid item xs={12}>
+                <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mt: 2 }}>
+                  <Button
+                    variant="outlined"
+                    component={Link}
+                    to="/"
+                    startIcon={<HomeIcon />}
+                    sx={{ 
+                      borderRadius: 2,
+                      borderColor: '#D1D5DB',
+                      color: 'text.primary',
+                      '&:hover': {
+                        borderColor: '#9CA3AF',
+                        backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                      }
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    disabled={loading}
+                    sx={{ 
+                      bgcolor: '#F59E0B',
+                      '&:hover': {
+                        bgcolor: '#D97706'
+                      },
+                      borderRadius: 2,
+                      boxShadow: '0 4px 14px rgba(245, 158, 11, 0.25)',
+                      px: 4
+                    }}
+                  >
+                    {loading ? 'Submitting...' : 'Submit Complaint'}
+                  </Button>
+                </Stack>
+              </Grid>
+            </Grid>
+          </Box>
+          
+          <Box sx={{ mt: 4, p: 3, bgcolor: '#F8FAFC', borderRadius: 2, border: '1px solid', borderColor: 'divider', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
+            <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2, display: 'flex', alignItems: 'center', color: '#111827' }}>
+              <InfoIcon sx={{ mr: 1, color: '#F59E0B' }} />
+              What happens next?
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
+                <Box component="ul" sx={{ pl: 2, mb: 0 }}>
+                  <Typography component="li" variant="body2" sx={{ mb: 1.5, color: '#4B5563' }}>
+                    Your complaint will be reviewed by our team
+                  </Typography>
+                  <Typography component="li" variant="body2" sx={{ color: '#4B5563' }}>
+                    The issue will be escalated to the appropriate authorities
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Box component="ul" sx={{ pl: 2, mb: 0 }}>
+                  <Typography component="li" variant="body2" sx={{ mb: 1.5, color: '#4B5563' }}>
+                    You'll receive updates on the status via email
+                  </Typography>
+                  <Typography component="li" variant="body2" sx={{ color: '#4B5563' }}>
+                    The complaint will be visible on your dashboard
+                  </Typography>
+                </Box>
+              </Grid>
+            </Grid>
+          </Box>
+        </Paper>
+      </Container>
+    </Box>
   );
 };
 

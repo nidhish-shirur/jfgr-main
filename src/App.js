@@ -3,9 +3,13 @@ import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import Home from './pages/Home';
-import Login from './components/auth/login';
-import Signup from './components/auth/signup';
+import Login from './components/auth/Login';
+import Signup from './components/auth/Signup';
+import VolunteerLogin from './components/volunteer/VolunteerLogin';
+import VolunteerApplication from './components/volunteer/VolunteerApplication';
 import RegisterComplaint from './components/complaints/RegisterComplaint';
+import SimpleForm from './components/complaints/SimpleForm';
+import ComplaintLanding from './components/complaints/ComplaintLanding';
 import AdminDashboard from './components/admin/AdminDashboard';
 import CreateAdminUser from './components/auth/CreateAdminUser';
 import PrivateRoute from './components/auth/PrivateRoute';
@@ -56,13 +60,15 @@ function App() {
           <Route path="/reach" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/volunteer-login" element={<VolunteerLogin />} />
+          <Route path="/volunteer-application" element={<VolunteerApplication />} />
           <Route 
             path="/complaints" 
-            element={
-              <PrivateRoute>
-                <RegisterComplaint />
-              </PrivateRoute>
-            } 
+            element={<SimpleForm />} 
+          />
+          <Route
+            path="/complaint-landing"
+            element={<ComplaintLanding />}
           />
           
           {/* Admin Routes - Use PrivateRoute to protect admin pages */}
