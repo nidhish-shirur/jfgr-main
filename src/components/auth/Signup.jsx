@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, setDoc, getFirestore } from 'firebase/firestore';
-import { auth } from '../../firebase';
+import { createUserWithEmailAndPassword, updateProfile, deleteUser } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../../firebase'; // Import db from firebase.js
 import { FaUser, FaLock, FaEnvelope, FaUserAlt, FaKey } from 'react-icons/fa';
 
 const Signup = () => {
@@ -16,7 +16,6 @@ const Signup = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const db = getFirestore();
 
   // The admin secret key - using environment variable
   const ADMIN_SECRET_KEY = process.env.REACT_APP_ADMIN_SECRET_KEY || "JFGR-Admin-2023-SecureKey";
@@ -41,15 +40,16 @@ const Signup = () => {
       
       // Create the user with Firebase directly instead of through context
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
       
       // Add display name to the user profile
-      const displayName = `${firstName} ${lastName}`;
-      await updateProfile(userCredential.user, {
-        displayName: displayName
+      const displayName = `${firstName} ${lastName}`.trim();
+      await updateProfile(user, {
+        displayName: displayName || 'Anonymous', // Fallback if no name is provided
       });
       
       // Save user data to Firestore
-      const userId = userCredential.user.uid;
+      const userId = user.uid;
       const timestamp = new Date();
 
       // Set user role and permissions based on whether the secret key is correct
@@ -76,10 +76,10 @@ const Signup = () => {
         lastName,
         username,
         email,
-        displayName,
+        displayName: displayName || 'Anonymous',
         role,
         permissions,
-        photoURL: userCredential.user.photoURL || '',
+        photoURL: user.photoURL || '',
         createdAt: timestamp,
         lastLogin: timestamp,
         complaints: [],
@@ -103,11 +103,18 @@ const Signup = () => {
         };
       }
 
-      await setDoc(doc(db, "users", userId), userData);
-      
-      console.log('User created successfully and data saved to Firestore:', userCredential.user);
-      if (isAdmin) {
-        console.log('Created with ADMIN privileges');
+      // Save to Firestore, and roll back if it fails
+      try {
+        await setDoc(doc(db, "users", userId), userData);
+        console.log('User created successfully and data saved to Firestore:', user);
+        if (isAdmin) {
+          console.log('Created with ADMIN privileges');
+        }
+      } catch (firestoreError) {
+        console.error('Error saving to Firestore:', firestoreError);
+        // Roll back: delete the user from Authentication
+        await deleteUser(user);
+        throw new Error('Failed to save user data to Firestore: ' + firestoreError.message);
       }
       
       // Navigate to login page after successful signup
@@ -297,4 +304,4 @@ const Signup = () => {
   );
 };
 
-export default Signup; 
+export default Signup;
