@@ -1,18 +1,17 @@
-import React, { useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Signup from './components/auth/Signup';
+import Home from './pages/Home'; // Fixed path
+import Login from './components/auth/login';
+import Signup from './components/auth/signup';
 import RegisterComplaint from './components/complaints/RegisterComplaint';
-import AdminDashboard from './components/admin/AdminDashboard';
+import AdminDashboard from './components/dashboard/AdminDashboard';
 import CreateAdminUser from './components/auth/CreateAdminUser';
-import CreateAdmin from './components/admin/CreateAdmin';
 import PrivateRoute from './components/auth/PrivateRoute';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from './firebase';
-import { testFirebase } from './firebaseTest';
+import { auth, db } from './firebase';
+import { doc, getDoc } from 'firebase/firestore';
 import './App.css';
 
 // ScrollToTop component to reset scroll position on page navigation
@@ -27,17 +26,41 @@ const ScrollToTop = () => {
 };
 
 function App() {
+  const [role, setRole] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
   // Set up auth state listener
   useEffect(() => {
-    // Test Firebase connection
-    testFirebase();
-    
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log('Auth state changed:', user ? `User: ${user.email}` : 'No user');
+      if (user) {
+        getDoc(doc(db, 'users', user.uid)).then((doc) => {
+          if (doc.exists()) {
+            const userRole = doc.data().role;
+            setRole(userRole);
+            if (userRole === 'admin') {
+              navigate('/admin'); // Admins go to AdminDashboard
+            } else {
+              navigate('/'); // Users go to Home
+            }
+          } else {
+            setRole('user'); // Default to user if no role is found
+            navigate('/');
+          }
+          setLoading(false);
+        });
+      } else {
+        setRole(null);
+        setLoading(false);
+      }
     });
-    
+
     return () => unsubscribe();
-  }, []);
+  }, [navigate]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -52,10 +75,31 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/complaints" element={<RegisterComplaint />} />
           
-          {/* Admin Routes - Temporarily removed PrivateRoute wrapper */}
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/create" element={<CreateAdmin />} />
-          <Route path="/create-admin" element={<CreateAdminUser />} />
+          {/* Admin Routes - Use PrivateRoute to protect admin pages */}
+          <Route
+            path="/admin"
+            element={
+              <PrivateRoute>
+                <AdminDashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/create"
+            element={
+              <PrivateRoute>
+                <CreateAdminUser />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/create-admin"
+            element={
+              <PrivateRoute>
+                <CreateAdminUser />
+              </PrivateRoute>
+            }
+          />
         </Routes>
       </main>
       <Footer />
@@ -63,4 +107,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;

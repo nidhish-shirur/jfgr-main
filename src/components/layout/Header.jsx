@@ -228,7 +228,7 @@ const Header = () => {
                 justifyContent: 'flex-start',
                 borderRadius: 2,
                 backgroundColor: (activeSection === item.section || location.pathname === item.path) 
-                  ? 'rgba(255, 205, 41, 0.15)' 
+                  ? 'rgba(255, 205, 3, 0.15)' 
                   : 'transparent',
                 color: (activeSection === item.section || location.pathname === item.path) 
                   ? 'primary.main' 
@@ -268,27 +268,6 @@ const Header = () => {
       <Box sx={{ px: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
         {currentUser ? (
           <>
-            <Button 
-              component={Link}
-              to="/admin"
-              variant="outlined"
-              color="primary"
-              fullWidth
-              startIcon={<PersonIcon />}
-              sx={{ 
-                py: 1.2, 
-                borderRadius: 2,
-                borderWidth: 1.5,
-                textTransform: 'none',
-                fontWeight: 600,
-                '&:hover': {
-                  borderWidth: 1.5,
-                  backgroundColor: 'rgba(255, 205, 41, 0.08)'
-                }
-              }}
-            >
-              Admin Dashboard
-            </Button>
             <Button 
               variant="contained" 
               color="primary"
@@ -428,31 +407,6 @@ const Header = () => {
 
               {/* Auth section - desktop */}
               <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 2 }}>
-                {/* Temporary Admin Dashboard Access Button */}
-                <Button
-                  component={Link}
-                        to="/admin"
-                  variant="outlined"
-                  color="primary"
-                  startIcon={<PersonIcon />}
-                  sx={{ 
-                    borderRadius: 2,
-                    borderWidth: 1.5,
-                    py: 1,
-                    px: 2,
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    '&:hover': {
-                      borderWidth: 1.5,
-                      bgcolor: 'rgba(255, 205, 41, 0.08)',
-                      transform: 'translateY(-2px)'
-                    },
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  Admin Dashboard
-                </Button>
-
                 {currentUser ? (
                   <>
                     <Button
@@ -525,22 +479,22 @@ const Header = () => {
                       </MenuItem>
                       <Divider sx={{ my: 1 }} />
                       <MenuItem 
-                  onClick={handleLogout}
+                        onClick={handleLogout}
                         sx={{ 
                           py: 1.2, 
                           px: 2,
                           color: 'error.main',
                           '&:hover': { bgcolor: 'rgba(211, 47, 47, 0.08)' } 
                         }}
-                >
-                  Logout
+                      >
+                        Logout
                       </MenuItem>
                     </Menu>
                   </>
-            ) : (
+                ) : (
                   <Button
                     component={Link}
-                to="/login" 
+                    to="/login" 
                     variant="contained"
                     color="primary"
                     sx={{ 
@@ -620,4 +574,4 @@ const Header = () => {
   );
 };
 
-export default Header; 
+export default Header;
